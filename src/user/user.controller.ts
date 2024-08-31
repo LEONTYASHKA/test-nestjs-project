@@ -1,13 +1,16 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserInterface } from './interfaces/user.interface';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { CreatePatDto } from './dtos/CreatePatDto';
+import { Pet } from './interfaces/pet';
 
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) {
+  }
 
   @Get()
   getUsers(): Array<UserInterface> {
@@ -21,9 +24,19 @@ export class UserController {
 
 
   @Put(':id')
-  updateUser(@Body() dto: UpdateUserDto, @Param('id') userIdToUpdate: string): UserInterface {
+  async updateUser(@Body() dto: UpdateUserDto, @Param('id') userIdToUpdate: string): Promise<UserInterface> {
     return this.userService.updateUser(parseInt(userIdToUpdate), dto.firstName, dto.lastName, dto.age);
   }
 
+  @Delete(':id')
+  async deleteUser(@Param('id') userId: number): Promise<{ message: string }> {
+    return {
+      message: await this.userService.udolenieUsera(userId)
+    };
+  }
 
+  @Post(':id/pet')
+  addPatByUserId(@Body() dto: CreatePatDto, @Param('id') userId: number){
+    return this.userService.addPatByUserId(userId, dto.name, dto.age);
+  }
 }
