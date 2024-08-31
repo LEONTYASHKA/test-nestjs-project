@@ -6,7 +6,7 @@ import { Pet } from './interfaces/pet';
 @Injectable()
 export class UserService {
   private users = new Array<UserInterface>();
-  private map = new Map<number, Pet>();
+  private map = new Map<number, Array<Pet>>();
   private patCounter: number = 1;
 
   constructor(private readonly patService: PatService) {
@@ -32,6 +32,17 @@ export class UserService {
         return this.users[i];
       }
     }
+  }
+  findPetByName(userId: number, petsName: string){
+    const foundUser = this.findUserById(userId);
+    if (!foundUser){
+      throw new NotFoundException('User with such id not found');
+    }
+    for( let i = 0; i < foundUser.pets.length; i++){
+      if (foundUser.pets[i].name == petsName){
+        return foundUser.pets[i];
+    }
+  }
   }
 
   getAllUsers() {
@@ -89,10 +100,19 @@ export class UserService {
      if (!foundUser){ // Проверяю есть ли юзер с данным айди
        throw new NotFoundException('User with such id not found ');
      }
-     const newPet = new Pet(this.patCounter++, name, age); // создаю переменую в которую добавляю нового  питомца
-     this.map.set(userId, newPet);// ну вот сохранил его в мапу как ты и хотел
-
-     foundUser.pets.push(newPet);// добавляю найденому юзеру в масив pets нашего питомца
-      return newPet;
+     const foundPet = this.findPetByName(userId, name);// нахожу питомца с конкретным именем
+     if (foundPet){ // Проверяю есть ли питомец с таким именем
+       throw new BadRequestException('Pets with this name aready exists')
+     }
+     else {
+       const newPet = new Pet(this.patCounter++, name, age); // создаю переменую в которую добавляю нового  питомца
+       if (!this.map.has(userId)) {
+         this.map.set(userId, []);// Если у выбраного пользователя нет масива с петсами, создаю ему пустой масив
+       }
+       const userPetsInMap = this.map.get(userId);
+       userPetsInMap.push(newPet); // добавляю нового питомца в меп по выбраному ключу
+       foundUser.pets.push(newPet);// добавляю найденому юзеру в масив pets нашего питомца
+       return newPet;
+     }
   }
 }
