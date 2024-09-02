@@ -1,22 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { UserInterface } from './interfaces/user.interface';
+import { User } from './interfaces/user';
 import { PatService } from './pat.service';
 import { Pet } from './interfaces/pet';
 
 @Injectable()
 export class UserService {
-  private users = new Array<UserInterface>();
-  private map = new Map<number, Array<Pet>>();
+  private users = new Array<User>();
+  private map = new Map<number, Pet> ();
   private patCounter: number = 1;
 
   constructor(private readonly patService: PatService) {
-    this.users.push({
-      id: 1,
-      firstName: "vasya",
-      lastName: "Honcharenko",
-      age: 45,
-      pets: []
-    });
+    const user = new User(1, "vasya", "Honcharenko", 45,)
+    this.users.push(user);
   }
   findUserById(id) {
     for (let i = 0; i < this.users.length; i++) {
@@ -50,7 +45,7 @@ export class UserService {
 
   }
 
-  createNewUser(id: number, firstName: string, lastName: string, age: number): UserInterface {
+  createNewUser(id: number, firstName: string, lastName: string, age: number): User {
     const user = {
       id: id,
       firstName: firstName,
@@ -62,7 +57,7 @@ export class UserService {
     return user;
   }
 
-  async updateUser(userIdToUpdate: number, NewFirstName: string, NewLastName: string, NewAge: number): Promise<UserInterface> {
+  async updateUser(userIdToUpdate: number, NewFirstName: string, NewLastName: string, NewAge: number): Promise<User> {
     const findedUser = this.findUserById(userIdToUpdate);
     if (!findedUser) {
       throw new NotFoundException('User with such id not found');
@@ -80,7 +75,7 @@ export class UserService {
   }
   udolenieUsera(userId: number): string{
     const findedUser = this.findUserById(userId);
-    const newUsersArray = new Array<UserInterface>();
+    const newUsersArray = new Array<User>();
     if (!findedUser) {
       return 'User not found';
     }
@@ -106,13 +101,13 @@ export class UserService {
      }
      else {
        const newPet = new Pet(this.patCounter++, name, age); // создаю переменую в которую добавляю нового  питомца
-       if (!this.map.has(userId)) {
-         this.map.set(userId, []);// Если у выбраного пользователя нет масива с петсами, создаю ему пустой масив
-       }
-       const userPetsInMap = this.map.get(userId);
-       userPetsInMap.push(newPet); // добавляю нового питомца в меп по выбраному ключу
+         this.map.set(foundUser.id, newPet);// Если у выбраного пользователя нет масива с петсами, создаю ему пустой масив
+
        foundUser.pets.push(newPet);// добавляю найденому юзеру в масив pets нашего питомца
        return newPet;
      }
+  }
+  getPetsById(userId) {
+    return this.map.get(userId);
   }
 }
